@@ -43,10 +43,12 @@ describe("DiagnosticsPanel Component", () => {
         </ZMKAppProvider>
       );
 
-      // Check for tab buttons
-      expect(screen.getByText(/Key Matrix/i)).toBeInTheDocument();
-      expect(screen.getByText(/Event Log/i)).toBeInTheDocument();
-      expect(screen.getByText(/GPIO Pins/i)).toBeInTheDocument();
+      // Check for tab buttons - use getAllByRole for buttons
+      const tabButtons = screen.getAllByRole('button');
+      const tabTexts = tabButtons.map(btn => btn.textContent);
+      expect(tabTexts.some(text => text?.includes('Key Matrix'))).toBe(true);
+      expect(tabTexts.some(text => text?.includes('Event Log'))).toBe(true);
+      expect(tabTexts.some(text => text?.includes('GPIO Pins'))).toBe(true);
     });
 
     it("should show troubleshooting guide", () => {
