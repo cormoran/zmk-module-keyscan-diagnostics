@@ -8,3 +8,45 @@ config ZMK_TEMPLATE_FEATURE_STUDIO_RPC
     depends on ZMK_STUDIO
 
 endif
+
+# Keyscan Diagnostics Module
+config ZMK_KEYSCAN_DIAGNOSTICS
+    bool "Enable keyscan diagnostics module"
+    help
+      Enable the keyscan diagnostics module for investigating
+      key switch and soldering issues.
+
+if ZMK_KEYSCAN_DIAGNOSTICS
+
+config ZMK_KEYSCAN_DIAGNOSTICS_STUDIO_RPC
+    bool "Enable keyscan diagnostics custom Studio RPC"
+    depends on ZMK_STUDIO
+    help
+      Enable the custom Studio RPC subsystem for keyscan diagnostics.
+      This allows the web UI to communicate with the diagnostics module.
+
+config ZMK_KEYSCAN_DIAGNOSTICS_MAX_EVENTS
+    int "Maximum number of key events to buffer"
+    default 64
+    range 16 256
+    help
+      Maximum number of key events to buffer for monitoring.
+      Larger values use more memory but allow capturing more events.
+
+config ZMK_KEYSCAN_DIAGNOSTICS_CHATTERING_WINDOW_MS
+    int "Default chattering detection window (ms)"
+    default 50
+    range 10 500
+    help
+      Default time window in milliseconds for detecting chattering.
+      Events within this window are counted for chattering detection.
+
+config ZMK_KEYSCAN_DIAGNOSTICS_CHATTERING_THRESHOLD
+    int "Default chattering event threshold"
+    default 4
+    range 2 20
+    help
+      Default number of events within the window to trigger a chattering alert.
+      Lower values are more sensitive to chattering.
+
+endif # ZMK_KEYSCAN_DIAGNOSTICS

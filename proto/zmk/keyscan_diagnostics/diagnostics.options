@@ -1,0 +1,22 @@
+# Nanopb options file for keyscan_diagnostics.proto
+# This defines max sizes for variable-length fields
+
+# GPIO pin configuration
+zmk.keyscan_diagnostics.GpioPin.port_name                    max_size:16
+
+# Charlieplex config - max 20 GPIOs should cover most keyboards
+zmk.keyscan_diagnostics.CharlieplexConfig.gpios              max_count:20
+
+# Error messages
+zmk.keyscan_diagnostics.ErrorResponse.message                max_size:64
+zmk.keyscan_diagnostics.StartMonitoringResponse.message      max_size:64
+zmk.keyscan_diagnostics.TestGpioPinResponse.error_message    max_size:64
+
+# Key events - buffer up to 64 events
+zmk.keyscan_diagnostics.GetEventsResponse.events             max_count:64
+
+# Key matrix - support up to 120 keys (enough for most keyboards)
+zmk.keyscan_diagnostics.GetKeyMatrixResponse.keys            max_count:120
+
+# Chattering alerts - track up to 32 problematic keys
+zmk.keyscan_diagnostics.GetChatteringAlertsResponse.alerts   max_count:32

@@ -41,6 +41,7 @@ class WestCommandsTests(unittest.TestCase):
         result = run_west(["zmk-test", "tests", '-m', '.'])
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("PASS: studio", result.stdout)
+        self.assertIn("PASS: keyscan_diagnostics", result.stdout)
 
     def test_zmk_build(self):
         artifacts_and_expected_config: dict[str, list[str | NotFound]] = {
@@ -55,7 +56,12 @@ class WestCommandsTests(unittest.TestCase):
                 "# CONFIG_ZMK_STUDIO is not set",
                 "CONFIG_ZMK_TEMPLATE_FEATURE=y",
                 NotFound("CONFIG_ZMK_TEMPLATE_FEATURE_STUDIO_RPC"),
-            ]
+            ],
+            "my_awesome_keyboard_with_keyscan_diagnostics": [
+                "CONFIG_ZMK_STUDIO=y",
+                "CONFIG_ZMK_KEYSCAN_DIAGNOSTICS=y",
+                "CONFIG_ZMK_KEYSCAN_DIAGNOSTICS_STUDIO_RPC=y",
+            ],
         }
 
         for artifact in artifacts_and_expected_config.keys():

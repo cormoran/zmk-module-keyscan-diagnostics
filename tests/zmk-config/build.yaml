@@ -9,4 +9,10 @@ include:
     board: seeeduino_xiao_ble
     shield: my_awesome_keyboard
 
+  - artifact: my_awesome_keyboard_with_keyscan_diagnostics
+    board: seeeduino_xiao_ble
+    shield: my_awesome_keyboard_charlieplex
+    cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_KEYSCAN_DIAGNOSTICS_STUDIO_RPC=y
+    snippet: studio-rpc-usb-uart
+
 ---

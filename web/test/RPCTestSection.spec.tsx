@@ -1,9 +1,8 @@
 /**
- * Tests for RPCTestSection component
+ * Tests for DiagnosticsPanel component
  * 
  * This test demonstrates how to use react-zmk-studio test helpers to test
- * components that interact with ZMK devices. This serves as a reference
- * implementation for template users.
+ * components that interact with ZMK devices.
  */
 
 import { render, screen } from "@testing-library/react";
@@ -11,11 +10,11 @@ import {
   createConnectedMockZMKApp,
   ZMKAppProvider,
 } from "@cormoran/zmk-studio-react-hook/testing";
-import { RPCTestSection, SUBSYSTEM_IDENTIFIER } from "../src/App";
+import { DiagnosticsPanel, SUBSYSTEM_IDENTIFIER } from "../src/App";
 
-describe("RPCTestSection Component", () => {
+describe("DiagnosticsPanel Component", () => {
   describe("With Subsystem", () => {
-    it("should render RPC controls when subsystem is found", () => {
+    it("should render diagnostics panel when subsystem is found", () => {
       // Create a connected mock ZMK app with the required subsystem
       const mockZMKApp = createConnectedMockZMKApp({
         deviceName: "Test Device",
@@ -24,31 +23,46 @@ describe("RPCTestSection Component", () => {
 
       render(
         <ZMKAppProvider value={mockZMKApp}>
-          <RPCTestSection />
+          <DiagnosticsPanel />
         </ZMKAppProvider>
       );
 
-      // Check for RPC test UI elements
-      expect(screen.getByText(/RPC Test/i)).toBeInTheDocument();
-      expect(screen.getByText(/Send a sample request/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/Value:/i)).toBeInTheDocument();
-      expect(screen.getByText(/Send Request/i)).toBeInTheDocument();
+      // Check for diagnostics UI elements
+      expect(screen.getByText(/Key Monitoring/i)).toBeInTheDocument();
+      expect(screen.getByText(/Start Monitoring/i)).toBeInTheDocument();
     });
 
-    it("should show default input value", () => {
+    it("should show tab navigation", () => {
       const mockZMKApp = createConnectedMockZMKApp({
         subsystems: [SUBSYSTEM_IDENTIFIER],
       });
 
       render(
         <ZMKAppProvider value={mockZMKApp}>
-          <RPCTestSection />
+          <DiagnosticsPanel />
         </ZMKAppProvider>
       );
 
-      // Check that the input has a default value
-      const input = screen.getByLabelText(/Value:/i) as HTMLInputElement;
-      expect(input.value).toBe("42");
+      // Check for tab buttons
+      expect(screen.getByText(/Key Matrix/i)).toBeInTheDocument();
+      expect(screen.getByText(/Event Log/i)).toBeInTheDocument();
+      expect(screen.getByText(/GPIO Pins/i)).toBeInTheDocument();
+    });
+
+    it("should show troubleshooting guide", () => {
+      const mockZMKApp = createConnectedMockZMKApp({
+        subsystems: [SUBSYSTEM_IDENTIFIER],
+      });
+
+      render(
+        <ZMKAppProvider value={mockZMKApp}>
+          <DiagnosticsPanel />
+        </ZMKAppProvider>
+      );
+
+      // Check for troubleshooting section
+      expect(screen.getByText(/Troubleshooting Guide/i)).toBeInTheDocument();
+      expect(screen.getByText(/Key doesn't register at all/i)).toBeInTheDocument();
     });
   });
 
@@ -62,19 +76,19 @@ describe("RPCTestSection Component", () => {
 
       render(
         <ZMKAppProvider value={mockZMKApp}>
-          <RPCTestSection />
+          <DiagnosticsPanel />
         </ZMKAppProvider>
       );
 
       // Check for warning message
-      expect(screen.getByText(/Subsystem "zmk__template" not found/i)).toBeInTheDocument();
-      expect(screen.getByText(/Make sure your firmware includes the template module/i)).toBeInTheDocument();
+      expect(screen.getByText(/Subsystem "zmk__keyscan_diagnostics" not found/i)).toBeInTheDocument();
+      expect(screen.getByText(/CONFIG_ZMK_KEYSCAN_DIAGNOSTICS=y/i)).toBeInTheDocument();
     });
   });
 
   describe("Without ZMKAppContext", () => {
     it("should not render when ZMKAppContext is not provided", () => {
-      const { container } = render(<RPCTestSection />);
+      const { container } = render(<DiagnosticsPanel />);
 
       // Component should return null when context is not available
       expect(container.firstChild).toBeNull();
