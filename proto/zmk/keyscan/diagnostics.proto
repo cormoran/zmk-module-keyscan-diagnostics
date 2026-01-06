@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package zmk.keyscan;
+
+message SnapshotRequest {
+    // When true, counters are reset after the snapshot is taken.
+    bool reset_counters = 1;
+}
+
+message Request {
+    oneof request_type {
+        SnapshotRequest snapshot = 1;
+    }
+}
+
+message ErrorResponse {
+    string message = 1;
+}
+
+message PhysicalPosition {
+    int32 x = 1;
+    int32 y = 2;
+    int32 width = 3;
+    int32 height = 4;
+}
+
+message KeyStatus {
+    uint32 position = 1;
+    bool pressed = 2;
+    uint32 press_count = 3;
+    uint32 release_count = 4;
+    uint32 chatter_count = 5;
+    int64 last_change_ms = 6;
+    uint32 line_drive = 7;
+    uint32 line_sense = 8;
+    bool never_seen = 9;
+    PhysicalPosition shape = 10;
+}
+
+message LineStatus {
+    uint32 index = 1;
+    string port = 2;
+    uint32 pin = 3;
+    uint32 activity = 4;
+    uint32 involved_keys = 5;
+    uint32 chatter_keys = 6;
+    bool suspected_fault = 7;
+}
+
+message SnapshotResponse {
+    repeated KeyStatus keys = 1;
+    repeated LineStatus lines = 2;
+    uint32 chatter_burst_threshold = 3;
+    uint32 chatter_window_ms = 4;
+}
+
+message Response {
+    oneof response_type {
+        ErrorResponse error = 1;
+        SnapshotResponse snapshot = 2;
+    }
+}

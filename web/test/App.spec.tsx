@@ -1,14 +1,8 @@
-/**
- * Tests for App component
- * 
- * This test file demonstrates how to test a ZMK web application using
- * the react-zmk-studio test helpers. It serves as a reference implementation
- * for users of this template.
- */
-
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { setupZMKMocks } from "@cormoran/zmk-studio-react-hook/testing";
+import { ZMKCustomSubsystem } from "@cormoran/zmk-studio-react-hook";
+import { Response } from "../src/proto/zmk/keyscan/diagnostics";
 import App from "../src/App";
 
 // Mock the ZMK client
@@ -22,13 +16,29 @@ jest.mock("@zmkfirmware/zmk-studio-ts-client/transport/serial", () => ({
 }));
 
 describe("App Component", () => {
+  const encodedSnapshot = Response.encode({
+    snapshot: {
+      keys: [{ position: 0, pressCount: 1, releaseCount: 1, chatterCount: 0 }],
+      lines: [],
+      chatterBurstThreshold: 3,
+      chatterWindowMs: 30,
+    },
+  }).finish();
+
+  beforeAll(() => {
+    jest
+      .spyOn(ZMKCustomSubsystem.prototype, "callRPC")
+      .mockResolvedValue(encodedSnapshot);
+  });
+
   describe("Basic Rendering", () => {
     it("should render the application header", () => {
       render(<App />);
       
-      // Check for the main title
-      expect(screen.getByText(/ZMK Module Template/i)).toBeInTheDocument();
-      expect(screen.getByText(/Custom Studio RPC Demo/i)).toBeInTheDocument();
+      expect(screen.getByText(/Keyscan Diagnostics/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Find stuck, missing, or chattering keys/i)
+      ).toBeInTheDocument();
     });
 
     it("should render connection button when disconnected", () => {
@@ -42,7 +52,7 @@ describe("App Component", () => {
       render(<App />);
 
       // Check for footer text
-      expect(screen.getByText(/Template Module/i)).toBeInTheDocument();
+      expect(screen.getByText(/Keyscan diagnostics/i)).toBeInTheDocument();
     });
   });
 
@@ -57,7 +67,7 @@ describe("App Component", () => {
       // Set up successful connection mock
       mocks.mockSuccessfulConnection({
         deviceName: "Test Keyboard",
-        subsystems: ["zmk__template"],
+        subsystems: ["zmk__keyscan_diag"],
       });
 
       // Mock the serial connect function to return our mock transport
@@ -84,7 +94,7 @@ describe("App Component", () => {
       expect(screen.getByText(/Disconnect/i)).toBeInTheDocument();
       
       // Verify RPC test section is visible
-      expect(screen.getByText(/RPC Test/i)).toBeInTheDocument();
+      expect(screen.getByText(/Keyscan Diagnostics/i)).toBeInTheDocument();
     });
   });
 });
