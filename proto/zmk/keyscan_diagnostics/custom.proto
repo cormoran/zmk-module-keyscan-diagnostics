@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+package zmk.keyscan_diagnostics;
+
+// GPIO Pin Information
+message GPIOPin {
+    uint32 pin = 1;
+    string port_name = 2;
+}
+
+// Key Event for diagnostics
+message KeyEvent {
+    uint32 row = 1;
+    uint32 col = 2;
+    bool pressed = 3;
+    uint64 timestamp_ms = 4;
+}
+
+// Chattering statistics for a specific key
+message ChatteringStats {
+    uint32 row = 1;
+    uint32 col = 2;
+    uint32 event_count = 3;        // Total events recorded
+    uint32 chatter_count = 4;      // Number of chattering events detected
+    uint64 last_event_ms = 5;      // Timestamp of last event
+    uint32 min_interval_ms = 6;    // Minimum interval between events
+}
+
+// Start monitoring request
+message StartMonitoringRequest {
+    bool enable_event_streaming = 1;  // Enable real-time event updates
+    uint32 chatter_threshold_ms = 2;  // Interval threshold for chattering detection (default: 50ms)
+}
+
+// Start monitoring response
+message StartMonitoringResponse {
+    bool success = 1;
+    uint32 gpio_count = 2;
+}
+
+// Stop monitoring request
+message StopMonitoringRequest {
+}
+
+// Stop monitoring response
+message StopMonitoringResponse {
+    bool success = 1;
+}
+
+// Get current state request
+message GetStateRequest {
+}
+
+// Get current state response
+message GetStateResponse {
+    bool monitoring_active = 1;
+    uint32 total_events = 2;
+    repeated KeyEvent recent_events = 3;    // Last N events
+    repeated ChatteringStats chatter_stats = 4;
+    repeated GPIOPin gpio_pins = 5;
+}
+
+// Clear diagnostics data request
+message ClearDataRequest {
+}
+
+// Clear diagnostics data response
+message ClearDataResponse {
+    bool success = 1;
+}
+
+// Get GPIO configuration request
+message GetGPIOConfigRequest {
+}
+
+// Get GPIO configuration response
+message GetGPIOConfigResponse {
+    repeated GPIOPin gpio_pins = 1;
+    uint32 matrix_rows = 2;
+    uint32 matrix_cols = 3;
+}
+
+message Request {
+    oneof request_type {
+        StartMonitoringRequest start_monitoring = 1;
+        StopMonitoringRequest stop_monitoring = 2;
+        GetStateRequest get_state = 3;
+        ClearDataRequest clear_data = 4;
+        GetGPIOConfigRequest get_gpio_config = 5;
+    }
+}
+
+message ErrorResponse {
+    string message = 1;
+}
+
+message Response {
+    oneof response_type {
+        ErrorResponse error = 1;
+        StartMonitoringResponse start_monitoring = 2;
+        StopMonitoringResponse stop_monitoring = 3;
+        GetStateResponse get_state = 4;
+        ClearDataResponse clear_data = 5;
+        GetGPIOConfigResponse get_gpio_config = 6;
+    }
+}
