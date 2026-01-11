@@ -171,7 +171,3 @@ Then open http://localhost:5173 in your browser.
 ## License
 
 MIT License - See [LICENSE](LICENSE) for details.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit issues and pull requests.
