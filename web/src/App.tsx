@@ -163,8 +163,9 @@ export function DiagnosticsPanel() {
       // Get events
       const eventsResp = await sendRequest({ getEvents: { clearBuffer: true } });
       if (eventsResp?.events?.events) {
-        setEvents(prev => [...prev, ...eventsResp.events!.events].slice(-100));
-        setTotalEvents(eventsResp.events.totalEvents);
+        const eventsData = eventsResp.events;
+        setEvents(prev => [...prev, ...eventsData.events].slice(-100));
+        setTotalEvents(eventsData.totalEvents);
       }
 
       // Get key matrix state
