@@ -162,8 +162,8 @@ export function DiagnosticsPanel() {
     const pollEvents = async () => {
       // Get events
       const eventsResp = await sendRequest({ getEvents: { clearBuffer: true } });
-      if (eventsResp?.events) {
-        setEvents(prev => [...prev, ...eventsResp.events.events].slice(-100));
+      if (eventsResp?.events?.events) {
+        setEvents(prev => [...prev, ...eventsResp.events!.events].slice(-100));
         setTotalEvents(eventsResp.events.totalEvents);
       }
 
@@ -175,7 +175,7 @@ export function DiagnosticsPanel() {
 
       // Get chattering alerts
       const alertsResp = await sendRequest({ getChatteringAlerts: { clearAlerts: false } });
-      if (alertsResp?.chatteringAlerts) {
+      if (alertsResp?.chatteringAlerts?.alerts) {
         setChatteringAlerts(alertsResp.chatteringAlerts.alerts);
       }
     };

@@ -12,6 +12,15 @@ import {
 } from "@cormoran/zmk-studio-react-hook/testing";
 import { DiagnosticsPanel, SUBSYSTEM_IDENTIFIER } from "../src/App";
 
+// Suppress console.error during tests (RPC calls fail in test environment)
+const originalError = console.error;
+beforeAll(() => {
+  console.error = jest.fn();
+});
+afterAll(() => {
+  console.error = originalError;
+});
+
 describe("DiagnosticsPanel Component", () => {
   describe("With Subsystem", () => {
     it("should render diagnostics panel when subsystem is found", () => {

@@ -48,8 +48,10 @@ describe("App Component", () => {
     it("should render footer", () => {
       render(<App />);
 
-      // Check for footer text
-      expect(screen.getByText(/Keyscan Diagnostics Module/i)).toBeInTheDocument();
+      // Check for footer text - use querySelector for more specific targeting
+      const footer = document.querySelector('.app-footer');
+      expect(footer).toBeInTheDocument();
+      expect(footer?.textContent).toContain('Keyscan Diagnostics Module');
     });
   });
 
