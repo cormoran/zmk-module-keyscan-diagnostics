@@ -1,0 +1,9 @@
+# Nanopb options file for custom.proto
+# This defines max sizes for string fields and arrays
+
+zmk.keyscan_diagnostics.ErrorResponse.message               max_size:128
+zmk.keyscan_diagnostics.GPIOPin.port_name                   max_size:16
+zmk.keyscan_diagnostics.GetStateResponse.recent_events     max_count:20
+zmk.keyscan_diagnostics.GetStateResponse.chatter_stats     max_count:32
+zmk.keyscan_diagnostics.GetStateResponse.gpio_pins         max_count:16
+zmk.keyscan_diagnostics.GetGPIOConfigResponse.gpio_pins    max_count:16

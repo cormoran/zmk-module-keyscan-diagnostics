@@ -1,9 +1,8 @@
 /**
  * Tests for App component
  * 
- * This test file demonstrates how to test a ZMK web application using
- * the react-zmk-studio test helpers. It serves as a reference implementation
- * for users of this template.
+ * This test file demonstrates how to test the ZMK Keyscan Diagnostics application
+ * using the react-zmk-studio test helpers.
  */
 
 import { render, screen, waitFor } from "@testing-library/react";
@@ -27,8 +26,8 @@ describe("App Component", () => {
       render(<App />);
       
       // Check for the main title
-      expect(screen.getByText(/ZMK Module Template/i)).toBeInTheDocument();
-      expect(screen.getByText(/Custom Studio RPC Demo/i)).toBeInTheDocument();
+      expect(screen.getByText(/ZMK Keyscan Diagnostics/i)).toBeInTheDocument();
+      expect(screen.getByText(/Interactive Matrix Debugging Tool/i)).toBeInTheDocument();
     });
 
     it("should render connection button when disconnected", () => {
@@ -42,7 +41,7 @@ describe("App Component", () => {
       render(<App />);
 
       // Check for footer text
-      expect(screen.getByText(/Template Module/i)).toBeInTheDocument();
+      expect(screen.getByText(/Keyscan Diagnostics Module/i)).toBeInTheDocument();
     });
   });
 
@@ -57,7 +56,7 @@ describe("App Component", () => {
       // Set up successful connection mock
       mocks.mockSuccessfulConnection({
         deviceName: "Test Keyboard",
-        subsystems: ["zmk__template"],
+        subsystems: ["zmk__keyscan_diagnostics"],
       });
 
       // Mock the serial connect function to return our mock transport
@@ -83,8 +82,8 @@ describe("App Component", () => {
       // Verify disconnect button is now available
       expect(screen.getByText(/Disconnect/i)).toBeInTheDocument();
       
-      // Verify RPC test section is visible
-      expect(screen.getByText(/RPC Test/i)).toBeInTheDocument();
+      // Verify diagnostics section is visible
+      expect(screen.getByText(/Monitoring Control/i)).toBeInTheDocument();
     });
   });
 });

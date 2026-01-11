@@ -1,78 +1,136 @@
-# ZMK Module Template with Custom Web UI
+# ZMK Keyscan Diagnostics Module
 
-This repository contains a template for a ZMK module with Web UI by using
-**unofficial** custom studio rpc protocol.
+> 🔍 **Debug keyboard matrix issues with ease**
 
-Basic usage is the same to official template. Read through the
-[ZMK Module Creation](https://zmk.dev/docs/development/module-creation) page for
-details on how to configure this template.
+This ZMK module helps identify and diagnose keyboard matrix problems such as chattering, insufficient soldering, and GPIO issues. Perfect for keyboard builders who need to troubleshoot hot-swap socket installations.
 
-### Supporting custom studio RPC protocol
+## 🎯 Key Features
 
-This template contains sample implementation. Please edit and rename below files
-to implement your protocol.
+- **🔴 Chattering Detection**: Automatically identify keys with unstable contacts
+- **📊 Real-time Monitoring**: Track key events as they happen
+- **🔌 GPIO Visualization**: See your keyboard's GPIO configuration
+- **🌐 Interactive Web UI**: User-friendly diagnostics interface
+- **⚡ Charlieplex Support**: Optimized for charlieplex matrix keyboards
+- **🔧 Extensible**: Easy to add support for other kscan drivers
 
-- proto `proto/zmk/template/custom.proto` and `custom.options`
-- handler `src/studio/custom_handler.c`
-- flags in `Kconfig`
-- test `./tests/studio`
+## 🚀 Quick Start
 
-### Implementing Web UI for the custom protocol
+See **[USAGE.md](./USAGE.md)** for detailed setup and usage instructions.
 
-`./web` contains boilerplate based on
-[vite template `react-ts`](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts)
-(`npm create vite@latest web -- --template react-ts`) and react hook library
-[@cormoran/react-zmk-studio](https://github.com/cormoran/react-zmk-studio).
+### Basic Setup
 
-Please refer
-[react-zmk-studio README](https://github.com/cormoran/react-zmk-studio/blob/main/README.md).
+1. Add to your `config/west.yml`:
+```yaml
+projects:
+  - name: zmk-module-keyscan-diagnostics
+    remote: cormoran
+    revision: main
+```
 
-## Setup (Please edit!)
+2. Enable in your `config/<keyboard>.conf`:
+```conf
+CONFIG_ZMK_STUDIO=y
+CONFIG_ZMK_KEYSCAN_DIAGNOSTICS=y
+CONFIG_ZMK_KEYSCAN_DIAGNOSTICS_STUDIO_RPC=y
+```
 
-You can use this zmk-module with below setup.
+3. Build, flash, and connect via the web UI!
 
-1. Add dependency to your `config/west.yml`.
+## 📖 Documentation
 
-   ```yaml:config/west.yml
-   # Please update with your account and repository name after create repository from template
-   manifest:
-   remotes:
-       ...
-       - name: cormoran
-       url-base: https://github.com/cormoran
-   projects:
-       ...
-       - name: zmk-module-template-with-custom-studio-rpc
-       remote: cormoran
-       revision: main # or latest commit hash
-       # import: true # if this module has other dependencies
-       ...
-       # Below setting required to use unofficial studio custom PRC feature
-       - name: zmk
-       remote: cormoran
-       revision: v0.3+custom-studio-protocol
-       import:
-           file: app/west.yml
-   ```
+- **[USAGE.md](./USAGE.md)** - Complete usage guide and troubleshooting
+- **[web/README.md](./web/README.md)** - Web UI development guide
 
-1. Enable flag in your `config/<shield>.conf`
+## 🌐 Web UI
 
-   ```conf:<shield>.conf
-   # Enable standalone features
-   CONFIG_ZMK_TEMPLATE_FEATURE=y
+Access the live web interface: **https://cormoran.github.io/zmk-module-keyscan-diagnostics/**
 
-   # Optionally enable studio custom RPC features
-   CONFIG_ZMK_STUDIO=y
-   CONFIG_ZMK_TEMPLATE_FEATURE_STUDIO_RPC=y
-   ```
+### Features
+- Connect to your keyboard via Serial
+- Start/stop monitoring with configurable chattering threshold
+- View GPIO pin configuration
+- See chattering statistics with severity indicators
+- Monitor recent key events in real-time
 
-1. Update your `<keyboard>.keymap` like .....
+## 🧪 Testing
 
-   ```
-   / {
-       ...
-   }
-   ```
+```bash
+# Firmware tests
+python -m unittest
+
+# Web UI tests
+cd web
+npm test
+```
+
+## 📦 What's Included
+
+- **Firmware Module**: Core diagnostics engine with event capture and analysis
+- **RPC Protocol**: Custom Studio RPC for communication
+- **Web UI**: React-based diagnostics interface
+- **Tests**: Both firmware and web UI test suites
+- **Documentation**: Comprehensive usage and development guides
+
+## 🎯 Use Cases
+
+### For Keyboard Builders
+- Verify hot-swap socket soldering quality
+- Identify chattering switches quickly
+- Debug matrix wiring issues
+- Confirm GPIO pin assignments
+
+### For Keyboard Designers
+- Test prototype keyboards
+- Validate matrix configurations
+- Debug custom kscan implementations
+- Gather statistics on key behavior
+
+## 🛠️ Development
+
+This project follows the ZMK module template structure with custom Studio RPC support.
+
+### Project Structure
+```
+├── include/          # Public headers
+├── src/
+│   ├── diagnostics/  # Core implementation
+│   └── studio/       # RPC handlers
+├── proto/            # Protocol buffers
+├── web/              # React web UI
+└── tests/            # Test suites
+```
+
+### Contributing
+
+Contributions welcome! Areas for improvement:
+- Additional kscan driver support (GPIO matrix, direct, demux)
+- Enhanced visualization (heatmaps, timeline view)
+- Data export (CSV, JSON)
+- Statistical analysis features
+
+## 📋 Requirements
+
+- ZMK with custom Studio RPC support
+- nRF52840 or compatible board
+- Serial connection capability
+- Currently: Charlieplex matrix keyboard
+
+## 🔗 Links
+
+- **Web UI**: https://cormoran.github.io/zmk-module-keyscan-diagnostics/
+- **Issues**: https://github.com/cormoran/zmk-module-keyscan-diagnostics/issues
+- **ZMK Discord**: https://zmk.dev/community/discord/invite
+
+## 📄 License
+
+MIT License - See [LICENSE](./LICENSE) for details
+
+## 🙏 Acknowledgments
+
+Built using:
+- [ZMK Firmware](https://zmk.dev/)
+- [react-zmk-studio](https://github.com/cormoran/react-zmk-studio)
+- ZMK Module Template by [@cormoran](https://github.com/cormoran)
 
 ## Development Guide
 

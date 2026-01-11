@@ -1,10 +1,31 @@
-config ZMK_TEMPLATE_FEATURE
-    bool "Enable template feature"
+config ZMK_KEYSCAN_DIAGNOSTICS
+    bool "Enable keyscan diagnostics feature"
+    help
+      Enable keyscan diagnostics module for debugging keyboard matrix issues.
+      This module helps identify chattering, insufficient soldering, and other
+      keyscan problems by monitoring key events and GPIO states.
 
-if ZMK_TEMPLATE_FEATURE
+if ZMK_KEYSCAN_DIAGNOSTICS
 
-config ZMK_TEMPLATE_FEATURE_STUDIO_RPC
-    bool "Enable template feature custom Studio RPC"
+config ZMK_KEYSCAN_DIAGNOSTICS_STUDIO_RPC
+    bool "Enable keyscan diagnostics custom Studio RPC"
     depends on ZMK_STUDIO
+    help
+      Enable custom Studio RPC protocol for keyscan diagnostics.
+      This allows communication with the web UI for real-time diagnostics.
+
+config ZMK_KEYSCAN_DIAGNOSTICS_EVENT_BUFFER_SIZE
+    int "Maximum number of key events to store"
+    default 100
+    help
+      Maximum number of recent key events to store in the circular buffer.
+      Larger values use more RAM but provide more diagnostic history.
+
+config ZMK_KEYSCAN_DIAGNOSTICS_CHATTER_THRESHOLD_MS
+    int "Default chattering detection threshold in milliseconds"
+    default 50
+    help
+      Default interval threshold for detecting chattering.
+      Events occurring faster than this interval are considered chattering.
 
 endif

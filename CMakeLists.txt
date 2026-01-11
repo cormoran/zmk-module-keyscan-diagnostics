@@ -1,13 +1,15 @@
-# Template Feature CMakeLists.txt
+# Keyscan Diagnostics CMakeLists.txt
 
 # Include directories
 zephyr_include_directories(include)
-if(CONFIG_ZMK_TEMPLATE_FEATURE)
-    # target_sources(app PRIVATE ...)
+if(CONFIG_ZMK_KEYSCAN_DIAGNOSTICS)
+    # Add core diagnostics source files
+    file(GLOB CORE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/diagnostics/*.c)
+    target_sources(app PRIVATE ${CORE_FILES})
 
-    if(CONFIG_ZMK_TEMPLATE_FEATURE_STUDIO_RPC)
-        file(GLOB_RECURSE C_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c)
-        target_sources(app PRIVATE ${C_FILES})
+    if(CONFIG_ZMK_KEYSCAN_DIAGNOSTICS_STUDIO_RPC)
+        file(GLOB_RECURSE RPC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/studio/*.c)
+        target_sources(app PRIVATE ${RPC_FILES})
 
         list(APPEND CMAKE_MODULE_PATH ${ZEPHYR_BASE}/modules/nanopb)
         include(nanopb)
