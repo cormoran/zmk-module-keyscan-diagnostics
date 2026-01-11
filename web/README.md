@@ -1,15 +1,15 @@
-# ZMK Module Template - Web Frontend
+# ZMK Keyscan Diagnostics - Web Frontend
 
-This is a minimal web application template for interacting with ZMK firmware
-modules that implement custom Studio RPC subsystems.
+Interactive web application for diagnosing keyboard switch and soldering issues
+using ZMK firmware's keyscan diagnostics module.
 
 ## Features
 
-- **Device Connection**: Connect to ZMK devices via Bluetooth (GATT) or Serial
-- **Custom RPC**: Communicate with your custom firmware module using protobuf
-- **React + TypeScript**: Modern web development with Vite for fast builds
-- **react-zmk-studio**: Uses the `@cormoran/zmk-studio-react-hook` library for
-  simplified ZMK integration
+- **Device Connection**: Connect to ZMK devices via USB Serial
+- **Real-time Key Monitoring**: See key presses as they happen
+- **Chattering Detection**: Automatic alerts for keys with poor solder joints
+- **GPIO Visualization**: View pin configuration with Xiao board pinout
+- **Troubleshooting Guide**: Built-in help for common issues
 
 ## Quick Start
 
@@ -35,34 +35,32 @@ npm test
 ```
 src/
 ├── main.tsx              # React entry point
-├── App.tsx               # Main application with connection UI
+├── App.tsx               # Main application with diagnostics UI
 ├── App.css               # Styles
 └── proto/                # Generated protobuf TypeScript types
-    └── zmk/template/
-        └── custom.ts
+    └── zmk/keyscan_diagnostics/
+        └── diagnostics.ts
 
 test/
 ├── App.spec.tsx              # Tests for App component
-└── RPCTestSection.spec.tsx   # Tests for RPC functionality
+└── DiagnosticsPanel.spec.tsx # Tests for diagnostics functionality
 ```
 
 ## How It Works
 
 ### 1. Protocol Definition
 
-The protobuf schema is defined in `../proto/zmk/template/custom.proto`:
+The protobuf schema is defined in `../proto/zmk/keyscan_diagnostics/diagnostics.proto`:
 
 ```proto
 message Request {
     oneof request_type {
-        SampleRequest sample = 1;
-    }
-}
-
-message Response {
-    oneof response_type {
-        ErrorResponse error = 1;
-        SampleResponse sample = 2;
+        GetKscanConfigRequest get_kscan_config = 1;
+        GetKeyMatrixRequest get_key_matrix = 2;
+        StartMonitoringRequest start_monitoring = 3;
+        StopMonitoringRequest stop_monitoring = 4;
+        GetEventsRequest get_events = 5;
+        // ... more request types
     }
 }
 ```
@@ -75,31 +73,20 @@ TypeScript types are generated using `ts-proto`:
 npm run generate
 ```
 
-This runs `buf generate` which uses the configuration in `buf.gen.yaml`.
-
 ### 3. Using react-zmk-studio
 
 The app uses the `@cormoran/zmk-studio-react-hook` library:
 
 ```typescript
-import { useZMKApp, ZMKCustomSubsystem } from "@cormoran/zmk-studio-react-hook";
+import { ZMKConnection, ZMKCustomSubsystem } from "@cormoran/zmk-studio-react-hook";
 
-// Connect to device
-const { state, connect, findSubsystem, isConnected } = useZMKApp();
-
-// Find your subsystem
-const subsystem = findSubsystem("zmk__template");
-
-// Create service and make RPC calls
-const service = new ZMKCustomSubsystem(state.connection, subsystem.index);
-const response = await service.callRPC(payload);
+// Connect and make RPC calls
+const service = new ZMKCustomSubsystem(connection, subsystemIndex);
+const response = await service.callRPC(Request.encode(request).finish());
+const decoded = Response.decode(response);
 ```
 
 ## Testing
-
-This template includes Jest tests as a reference implementation for template users.
-
-### Running Tests
 
 ```bash
 # Run all tests
@@ -112,80 +99,42 @@ npm run test:watch
 npm run test:coverage
 ```
 
-### Test Structure
+## UI Components
 
-The tests demonstrate how to use the `react-zmk-studio` test helpers:
+### Key Matrix Display
+Visual grid showing all key positions with color-coded status:
+- Green: Currently pressed
+- Blue: Recent activity
+- Orange (pulsing): Chattering detected
+- Gray: Idle
 
-- **App.spec.tsx**: Basic rendering tests for the main application
-- **RPCTestSection.spec.tsx**: Tests showing how to mock ZMK connection and test
-  components that interact with devices
+### Event Log
+Chronological list of key events with:
+- Timestamp
+- Position (row, column)
+- Action (press/release)
+- GPIO pin information
 
-### Writing Tests
+### GPIO Pin Display
+- List of all GPIO pins with port and pin numbers
+- Visual Xiao board pinout showing which pins are used
+- Polarity information (active low/high)
 
-Use the test helpers from `@cormoran/zmk-studio-react-hook/testing`:
-
-```typescript
-import {
-  createConnectedMockZMKApp,
-  ZMKAppProvider,
-} from "@cormoran/zmk-studio-react-hook/testing";
-
-// Create a mock connected device with subsystems
-const mockZMKApp = createConnectedMockZMKApp({
-  deviceName: "Test Device",
-  subsystems: ["zmk__template"],
-});
-
-// Wrap your component with the provider
-render(
-  <ZMKAppProvider value={mockZMKApp}>
-    <YourComponent />
-  </ZMKAppProvider>
-);
-```
-
-See the test files in `./test/` for complete examples.
-
-## Customization
-
-To adapt this template for your own ZMK module:
-
-1. **Update the proto file**: Modify `../proto/zmk/template/custom.proto` with
-   your message types
-2. **Regenerate types**: Run `npm run generate`
-3. **Update subsystem identifier**: Change `SUBSYSTEM_IDENTIFIER` in `App.tsx`
-   to match your firmware registration
-4. **Update RPC logic**: Modify the request/response handling in `App.tsx`
-5. **Update tests**: Modify tests to match your custom subsystem identifier and
-   functionality
-
-## Dependencies
-
-- **@cormoran/zmk-studio-react-hook**: React hooks for ZMK Studio (includes
-  connection management and RPC utilities)
-- **@zmkfirmware/zmk-studio-ts-client**: Patched ZMK Studio TypeScript client
-  with custom RPC support
-- **ts-proto**: Protocol buffers code generator for TypeScript
-- **React 19**: Modern React with hooks
-- **Vite**: Fast build tool and dev server
-
-### Development Dependencies
-
-- **Jest**: Testing framework
-- **@testing-library/react**: React testing utilities
-- **ts-jest**: TypeScript support for Jest
-- **identity-obj-proxy**: CSS mock for testing
+### Chattering Alerts
+Prominent warning when chattering is detected showing:
+- Affected key position
+- GPIO pins involved
+- Event count and duration
+- Suggested fixes
 
 ## Development Notes
 
-- The `react-zmk-studio` directory contains a copy of the library for
-  reference - it's automatically built and linked via `package.json`
-- Proto generation uses `buf` and `ts-proto` for clean TypeScript types
-- Connection state is managed by the `useZMKApp` hook from react-zmk-studio
-- RPC calls are made through `ZMKCustomSubsystem` service class
+- Connection state is managed by the `useZMKApp` hook
+- RPC calls are made through `ZMKCustomSubsystem`
+- Polling for events uses `setInterval` with 500ms interval
+- Events are buffered (last 100) for display
 
 ## See Also
 
-- [design.md](./design.md) - Detailed frontend architecture documentation
-- [react-zmk-studio/README.md](./react-zmk-studio/README.md) - react-zmk-studio
-  library documentation
+- [Main README](../README.md) - Full module documentation
+- [react-zmk-studio](https://github.com/cormoran/react-zmk-studio) - React hooks library

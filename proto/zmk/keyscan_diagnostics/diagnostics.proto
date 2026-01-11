@@ -1,0 +1,217 @@
+syntax = "proto3";
+
+package zmk.keyscan_diagnostics;
+
+// ============================================================================
+// Keyscan Type Information
+// ============================================================================
+
+// Supported keyscan types - extensible for future implementations
+enum KscanType {
+    KSCAN_TYPE_UNKNOWN = 0;
+    KSCAN_TYPE_CHARLIEPLEX = 1;
+    KSCAN_TYPE_MATRIX = 2;      // Reserved for future
+    KSCAN_TYPE_DIRECT = 3;      // Reserved for future
+}
+
+// GPIO pin information for a single pin
+message GpioPin {
+    uint32 port = 1;            // GPIO port number
+    uint32 pin = 2;             // Pin number within port
+    string port_name = 3;       // Port name (e.g., "gpio0")
+    bool active_low = 4;        // Whether the pin is active low
+}
+
+// ============================================================================
+// Keyscan Configuration Information
+// ============================================================================
+
+// Charlieplex-specific configuration
+message CharlieplexConfig {
+    repeated GpioPin gpios = 1;         // GPIO pins used in charlieplex
+    uint32 debounce_press_ms = 2;       // Debounce time for press
+    uint32 debounce_release_ms = 3;     // Debounce time for release
+    uint32 debounce_scan_period_ms = 4; // Scan period during debounce
+    uint32 poll_period_ms = 5;          // Normal polling period
+    bool use_interrupt = 6;             // Whether interrupt mode is used
+}
+
+// General keyscan configuration response
+message KscanConfig {
+    KscanType type = 1;
+    oneof config {
+        CharlieplexConfig charlieplex = 2;
+        // Future: MatrixConfig matrix = 3;
+        // Future: DirectConfig direct = 4;
+    }
+}
+
+// ============================================================================
+// Key Event Monitoring
+// ============================================================================
+
+// A single key event with timing information
+message KeyEvent {
+    uint32 row = 1;             // Matrix row
+    uint32 col = 2;             // Matrix column
+    bool pressed = 3;           // True if pressed, false if released
+    uint64 timestamp_ms = 4;    // Timestamp in milliseconds since boot
+}
+
+// Start monitoring key events
+message StartMonitoringRequest {
+    uint32 max_events = 1;      // Maximum events to buffer (0 = use default)
+}
+
+message StartMonitoringResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+// Stop monitoring key events
+message StopMonitoringRequest {}
+
+message StopMonitoringResponse {
+    bool success = 1;
+}
+
+// Get buffered key events (polling method)
+message GetEventsRequest {
+    bool clear_buffer = 1;      // Clear buffer after returning events
+}
+
+message GetEventsResponse {
+    repeated KeyEvent events = 1;
+    bool buffer_overflow = 2;   // True if some events were lost
+    uint32 total_events = 3;    // Total events since monitoring started
+}
+
+// ============================================================================
+// Chattering Detection
+// ============================================================================
+
+// Chattering detection configuration
+message ChatteringConfig {
+    uint32 window_ms = 1;           // Time window for detecting chattering
+    uint32 threshold_count = 2;      // Number of events in window to trigger alert
+}
+
+// Configure chattering detection
+message ConfigureChatteringRequest {
+    ChatteringConfig config = 1;
+}
+
+message ConfigureChatteringResponse {
+    bool success = 1;
+}
+
+// Chattering alert for a specific key
+message ChatteringAlert {
+    uint32 row = 1;
+    uint32 col = 2;
+    uint32 event_count = 3;         // Number of events in the window
+    uint64 first_event_ms = 4;      // Timestamp of first event in window
+    uint64 last_event_ms = 5;       // Timestamp of last event in window
+}
+
+// Get chattering alerts
+message GetChatteringAlertsRequest {
+    bool clear_alerts = 1;
+}
+
+message GetChatteringAlertsResponse {
+    repeated ChatteringAlert alerts = 1;
+}
+
+// ============================================================================
+// Key Matrix Information
+// ============================================================================
+
+// Information about a specific key position in the matrix
+message KeyInfo {
+    uint32 row = 1;
+    uint32 col = 2;
+    uint32 gpio_out_index = 3;      // Index of output GPIO (for charlieplex: row)
+    uint32 gpio_in_index = 4;       // Index of input GPIO (for charlieplex: col)
+    bool current_state = 5;         // Current pressed state
+    uint32 press_count = 6;         // Total press count since monitoring
+    uint32 release_count = 7;       // Total release count since monitoring
+}
+
+// Get full key matrix information
+message GetKeyMatrixRequest {}
+
+message GetKeyMatrixResponse {
+    KscanType type = 1;
+    uint32 rows = 2;                // Number of rows
+    uint32 cols = 3;                // Number of columns
+    repeated KeyInfo keys = 4;      // Information about each key
+}
+
+// ============================================================================
+// GPIO Pin Testing (for diagnostics)
+// ============================================================================
+
+// Test a specific GPIO pin
+message TestGpioPinRequest {
+    uint32 gpio_index = 1;          // Index of GPIO to test
+}
+
+message TestGpioPinResponse {
+    bool success = 1;
+    uint32 gpio_index = 2;
+    bool pin_state = 3;             // Current state of the pin
+    string error_message = 4;       // Error message if failed
+}
+
+// ============================================================================
+// Request/Response Wrappers
+// ============================================================================
+
+message Request {
+    oneof request_type {
+        // Configuration queries
+        GetKscanConfigRequest get_kscan_config = 1;
+        GetKeyMatrixRequest get_key_matrix = 2;
+        
+        // Event monitoring
+        StartMonitoringRequest start_monitoring = 3;
+        StopMonitoringRequest stop_monitoring = 4;
+        GetEventsRequest get_events = 5;
+        
+        // Chattering detection
+        ConfigureChatteringRequest configure_chattering = 6;
+        GetChatteringAlertsRequest get_chattering_alerts = 7;
+        
+        // GPIO testing
+        TestGpioPinRequest test_gpio_pin = 8;
+    }
+}
+
+message GetKscanConfigRequest {}
+
+message ErrorResponse {
+    string message = 1;
+}
+
+message Response {
+    oneof response_type {
+        ErrorResponse error = 1;
+        
+        // Configuration responses
+        KscanConfig kscan_config = 2;
+        GetKeyMatrixResponse key_matrix = 3;
+        
+        // Event monitoring responses
+        StartMonitoringResponse start_monitoring = 4;
+        StopMonitoringResponse stop_monitoring = 5;
+        GetEventsResponse events = 6;
+        
+        // Chattering detection responses
+        ConfigureChatteringResponse configure_chattering = 7;
+        GetChatteringAlertsResponse chattering_alerts = 8;
+        
+        // GPIO testing responses
+        TestGpioPinResponse test_gpio_pin = 9;
+    }
+}

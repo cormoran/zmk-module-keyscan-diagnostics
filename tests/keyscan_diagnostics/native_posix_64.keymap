@@ -1,0 +1,22 @@
+#include "../test.dtsi"
+
+/ {
+	kscan0: kscan {
+		compatible = "zmk,kscan-gpio-charlieplex";
+		gpios
+		= <&gpio0 2 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>
+		, <&gpio0 3 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>
+		, <&gpio0 4 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>
+		;
+		debounce-press-ms = <5>;
+		debounce-release-ms = <5>;
+		debounce-scan-period-ms = <1>;
+		poll-period-ms = <10>;
+	};
+};
+
+/ {
+	chosen {
+		zmk,kscan = &kscan0;
+	};
+};

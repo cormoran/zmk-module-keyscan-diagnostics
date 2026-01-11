@@ -1,0 +1,15 @@
+if SHIELD_MY_AWESOME_KEYBOARD_CHARLIEPLEX
+
+config ZMK_KEYBOARD_NAME
+    default "MAK-CP"
+
+config ZMK_BLE
+    def_bool n
+
+config SETTINGS
+    def_bool n
+
+config ZMK_KEYSCAN_DIAGNOSTICS
+    default y
+
+endif

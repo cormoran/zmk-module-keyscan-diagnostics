@@ -1,229 +1,173 @@
-# ZMK Module Template with Custom Web UI
+# ZMK Keyscan Diagnostics Module
 
-This repository contains a template for a ZMK module with Web UI by using
-**unofficial** custom studio rpc protocol.
+A ZMK module with Web UI for diagnosing keyboard switch and soldering issues. This module helps keyboard kit builders and users identify problems like:
 
-Basic usage is the same to official template. Read through the
-[ZMK Module Creation](https://zmk.dev/docs/development/module-creation) page for
-details on how to configure this template.
+- Keys that don't register (insufficient soldering)
+- Chattering keys (intermittent contact due to cold solder joints)
+- Multiple keys affected by the same GPIO pin issues
 
-### Supporting custom studio RPC protocol
+## Features
 
-This template contains sample implementation. Please edit and rename below files
-to implement your protocol.
+### Firmware Module
+- **Real-time key event monitoring** - Track all key presses and releases with timestamps
+- **Chattering detection** - Automatically detect rapid state changes indicating poor solder joints
+- **GPIO pin information** - View which GPIO pins are used for each key position
+- **Key statistics** - Track press/release counts per key to identify problematic switches
 
-- proto `proto/zmk/template/custom.proto` and `custom.options`
-- handler `src/studio/custom_handler.c`
-- flags in `Kconfig`
-- test `./tests/studio`
+### Web UI
+- **Interactive key matrix visualization** - See which keys are pressed, have recent activity, or are chattering
+- **Event log** - Real-time stream of key events with GPIO information
+- **GPIO pin viewer** - Visual representation of pin configuration with Xiao board pinout
+- **Chattering alerts** - Highlighted warnings when chattering is detected
+- **Troubleshooting guide** - Built-in help for common soldering issues
 
-### Implementing Web UI for the custom protocol
+### Currently Supported Keyscan Types
+- ✅ **Charlieplex matrix** (`zmk,kscan-gpio-charlieplex`)
+- 🔜 GPIO matrix (planned)
+- 🔜 Direct GPIO (planned)
 
-`./web` contains boilerplate based on
-[vite template `react-ts`](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts)
-(`npm create vite@latest web -- --template react-ts`) and react hook library
-[@cormoran/react-zmk-studio](https://github.com/cormoran/react-zmk-studio).
+## Quick Start
 
-Please refer
-[react-zmk-studio README](https://github.com/cormoran/react-zmk-studio/blob/main/README.md).
+### 1. Add dependency to your `config/west.yml`
 
-## Setup (Please edit!)
+```yaml
+manifest:
+  remotes:
+    - name: cormoran
+      url-base: https://github.com/cormoran
+  projects:
+    - name: zmk-module-keyscan-diagnostics
+      remote: cormoran
+      revision: main
+    # Use the custom studio protocol fork of ZMK
+    - name: zmk
+      remote: cormoran
+      revision: v0.3+custom-studio-protocol
+      import:
+        file: app/west.yml
+```
 
-You can use this zmk-module with below setup.
+### 2. Enable in your `config/<shield>.conf`
 
-1. Add dependency to your `config/west.yml`.
+```conf
+# Enable keyscan diagnostics
+CONFIG_ZMK_KEYSCAN_DIAGNOSTICS=y
 
-   ```yaml:config/west.yml
-   # Please update with your account and repository name after create repository from template
-   manifest:
-   remotes:
-       ...
-       - name: cormoran
-       url-base: https://github.com/cormoran
-   projects:
-       ...
-       - name: zmk-module-template-with-custom-studio-rpc
-       remote: cormoran
-       revision: main # or latest commit hash
-       # import: true # if this module has other dependencies
-       ...
-       # Below setting required to use unofficial studio custom PRC feature
-       - name: zmk
-       remote: cormoran
-       revision: v0.3+custom-studio-protocol
-       import:
-           file: app/west.yml
-   ```
+# Enable Studio RPC for web UI (requires ZMK Studio)
+CONFIG_ZMK_STUDIO=y
+CONFIG_ZMK_KEYSCAN_DIAGNOSTICS_STUDIO_RPC=y
+```
 
-1. Enable flag in your `config/<shield>.conf`
+### 3. Build with Studio RPC snippet
 
-   ```conf:<shield>.conf
-   # Enable standalone features
-   CONFIG_ZMK_TEMPLATE_FEATURE=y
+```bash
+west build -b your_board -- -DSHIELD=your_shield -DSNIPPET=studio-rpc-usb-uart
+```
 
-   # Optionally enable studio custom RPC features
-   CONFIG_ZMK_STUDIO=y
-   CONFIG_ZMK_TEMPLATE_FEATURE_STUDIO_RPC=y
-   ```
+### 4. Use the Web UI
 
-1. Update your `<keyboard>.keymap` like .....
+Open the web UI at https://cormoran.github.io/zmk-module-keyscan-diagnostics (or run locally with `npm run dev` in the `web/` directory).
 
-   ```
-   / {
-       ...
-   }
-   ```
+1. Connect your keyboard via USB
+2. Click "Connect Serial"
+3. Start monitoring to see real-time key events
+4. Press keys to test - problematic keys will be highlighted
 
-## Development Guide
+## Understanding the Diagnostics
+
+### Key Matrix View
+The key matrix shows all possible key positions in the charlieplex matrix:
+- **Green**: Currently pressed
+- **Blue**: Recent activity
+- **Orange (pulsing)**: Chattering detected - likely soldering issue
+- **Gray**: Idle / No activity
+
+### Chattering Detection
+Chattering occurs when a key rapidly switches between pressed and released states. This typically indicates:
+- Cold solder joint on hot-swap socket
+- Debris in switch or socket  
+- Loose switch not fully seated
+
+The module detects chattering by tracking the number of events within a configurable time window.
+
+### GPIO Information
+For charlieplex keyboards, each key is identified by two GPIO pins:
+- **Row (Output)**: The pin driving the signal
+- **Column (Input)**: The pin reading the signal
+
+If multiple keys in the same row or column are affected, check the shared GPIO pin connection.
+
+## Configuration Options
+
+```conf
+# Maximum events to buffer (default: 64)
+CONFIG_ZMK_KEYSCAN_DIAGNOSTICS_MAX_EVENTS=64
+
+# Chattering detection window in ms (default: 50)
+CONFIG_ZMK_KEYSCAN_DIAGNOSTICS_CHATTERING_WINDOW_MS=50
+
+# Events in window to trigger alert (default: 4)
+CONFIG_ZMK_KEYSCAN_DIAGNOSTICS_CHATTERING_THRESHOLD=4
+```
+
+## Development
 
 ### Setup
 
-There are two west workspace layout options.
-
-#### Option1: Download dependencies in parent directory
-
-This option is west's standard way. Choose this option if you want to re-use dependent projects in other zephyr module development.
-
 ```bash
-mkdir west-workspace
-cd west-workspace # this directory becomes west workspace root (topdir)
-git clone <this repository>
-# rm -r .west # if exists to reset workspace
-west init -l . --mf tests/west-test.yml
-west update --narrow
-west zephyr-export
-```
+# Clone repository
+git clone https://github.com/cormoran/zmk-module-keyscan-diagnostics
+cd zmk-module-keyscan-diagnostics
 
-The directory structure becomes like below:
-
-```
-west-workspace
-  - .west/config
-  - build : build output directory
-  - <this repository>
-  # other dependencies
-  - zmk
-  - zephyr
-  - ...
-  # You can develop other zephyr modules in this workspace
-  - your-other-repo
-```
-
-You can switch between modules by removing `west-workspace/.west` and re-executing `west init ...`.
-
-#### Option2: Download dependencies in ./dependencies (Enabled in dev-container)
-
-Choose this option if you want to download dependencies under this directory (like node_modules in npm). This option is useful for specifying cache target in CI. The layout is relatively easy to recognize if you want to isolate dependencies.
-
-```bash
-git clone <this repository>
-cd <cloned directory>
+# Initialize west workspace
 west init -l west --mf west-test-standalone.yml
-# If you use dev container, start from below commands. Above commands are executed
-# automatically.
 west update --narrow
 west zephyr-export
 ```
 
-The directory structure becomes like below:
+### Running Tests
 
-```
-<this repository>
-  - .west/config
-  - build : build output directory
-  - dependencies
-    - zmk
-    - zephyr
-    - ...
-```
-
-### Dev container
-
-Dev container is configured for setup option2. The container creates below volumes to re-use resources among containers.
-
-- zmk-dependencies: dependencies dir for setup option2
-- zmk-build: build output directory
-- zmk-root-user: /root, the same to ZMK's official dev container
-
-### Web UI
-
-Please refer [./web/README.md](./web/README.md).
-
-## Test
-
-**ZMK firmware test**
-
-`./tests` directory contains test config for posix to confirm module functionality and config for xiao board to confirm build works.
-
-Tests can be executed by below command:
-
+**Firmware tests:**
 ```bash
-# Run all test case and verify results
 python -m unittest
 ```
 
-If you want to execute west command manually, run below. (for zmk-build, the result is not verified.)
-
-```
-# Build test firmware for xiao
-# `-m tests/zmk-config .` means tests/zmk-config and this repo are added as additional zephyr module
-west zmk-build tests/zmk-config/config -m tests/zmk-config .
-
-# Run zmk test cases
-# -m . is required to add this module to build
-west zmk-test tests -m .
-```
-
-**Web UI test**
-
-The `./web` directory includes Jest tests. See [./web/README.md](./web/README.md#testing) for more details.
-
+**Web UI tests:**
 ```bash
 cd web
+npm install
 npm test
 ```
 
-## Publishing Web UI
+### Running Web UI locally
 
-### GitHub Pages (Production)
+```bash
+cd web
+npm install
+npm run dev
+```
 
-Github actions are pre-configured to publish web UI to github pages.
+Then open http://localhost:5173 in your browser.
 
-1. Visit Settings>Pages
-1. Set source as "Github Actions"
-1. Visit Actions>"Test and Build Web UI"
-1. Click "Run workflow"
+## Troubleshooting
 
-Then, the Web UI will be available in
-`https://<your github account>.github.io/<repository name>/` like https://cormoran.github.io/zmk-module-template-with-custom-studio-rpc.
+### Key doesn't register at all
+1. Check if the hot-swap socket is properly soldered
+2. Verify the switch is fully inserted into the socket
+3. Check for cold solder joints (dull, grainy appearance)
+4. Use the GPIO Pins tab to identify which pin might have an issue
 
-### Cloudflare Workers (Pull Request Preview)
+### Key shows chattering
+1. Reflow solder on the hot-swap socket pads
+2. Check for debris in the switch or socket
+3. Try a different switch to rule out switch defects
+4. Consider increasing debounce time: `CONFIG_ZMK_KSCAN_DEBOUNCE_PRESS_MS=10`
 
-For previewing web UI changes in pull requests:
+### Multiple keys affected in same row/column
+1. Check the shared GPIO pin connection
+2. Look for solder bridges between adjacent pads
+3. Verify continuity of traces on the PCB
 
-1. Create a Cloudflare Workers project and configure secrets:
+## License
 
-   - `CLOUDFLARE_API_TOKEN`: API token with Cloudflare Pages edit permission
-   - `CLOUDFLARE_ACCOUNT_ID`: Your Cloudflare account ID
-   - (Optional) `CLOUDFLARE_PROJECT_NAME`: Project name (defaults to `zmk-module-web-ui`)
-   - Enable "Preview URLs" feature in cloudflare the project
-
-2. Optionally set up an `approval-required` environment in github repository settings requiring approval from repository owners
-
-3. Create a pull request with web UI changes - the preview deployment will trigger automatically and wait for approval
-
-## Sync changes in template
-
-By running `Actions > Sync Changes in Template > Run workflow`, pull request is created to your repository to reflect changes in template repository.
-
-If the template contains changes in `.github/workflows/*`, registering your github personal access token as `GH_TOKEN` to repository secret is required.
-The fine-grained token requires write to contents, pull-requests and workflows.
-Please see detail in [actions-template-sync](https://github.com/AndreasAugustin/actions-template-sync).
-
-## More Info
-
-For more info on modules, you can read through through the
-[Zephyr modules page](https://docs.zephyrproject.org/3.5.0/develop/modules.html)
-and [ZMK's page on using modules](https://zmk.dev/docs/features/modules).
-[Zephyr's west manifest page](https://docs.zephyrproject.org/3.5.0/develop/west/manifest.html#west-manifests)
-may also be of use.
+MIT License - See [LICENSE](LICENSE) for details.
