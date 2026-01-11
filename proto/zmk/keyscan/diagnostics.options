@@ -1,0 +1,3 @@
+zmk.keyscan.SnapshotResponse.keys max_count:256
+zmk.keyscan.SnapshotResponse.lines max_count:32
+zmk.keyscan.LineStatus.port max_size:16
